@@ -1,3 +1,1 @@
-## 0.1.0 (Unreleased)
-
-BACKWARDS INCOMPATIBILITIES / NOTES:
+## 0.1.0 (Initial Release)

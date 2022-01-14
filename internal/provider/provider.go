@@ -2,7 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
+	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/load"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -27,31 +31,59 @@ func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		p := &schema.Provider{
 			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
-			},
-			ResourcesMap: map[string]*schema.Resource{
-				"scaffolding_resource": resourceScaffolding(),
+				"cue_export": DataSourceExport(),
 			},
 		}
 
-		p.ConfigureContextFunc = configure(version, p)
+		p.ConfigureContextFunc = Configure(version, p)
 
 		return p
 	}
 }
 
-type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
+func Configure(_ string, _ *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	return func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		return &Client{}, nil
+	}
 }
 
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		// Setup a User-Agent for your API client (replace the provider name for yours):
-		// userAgent := p.UserAgent("terraform-provider-scaffolding", version)
-		// TODO: myClient.UserAgent = userAgent
+// Client is a workaround for some concurrency problems inside cue
+// These are triggered i.e. when loading instances concurrently
+// See https://github.com/cue-lang/cue/issues/460
+type Client struct {
+	mtx sync.Mutex
+}
 
-		return &apiClient{}, nil
+func (c *Client) Load(ctx *cue.Context, args []string, cfg *load.Config) ([]cue.Value, error) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	var values []cue.Value
+	for _, i := range load.Instances(args, cfg) {
+		if err := i.Err; err != nil {
+			return nil, fmt.Errorf("failed to load instance: %w", err)
+		}
+
+		val := ctx.BuildInstance(i)
+		if err := val.Err(); err != nil {
+			return nil, fmt.Errorf("failed to build instance: %w", err)
+		}
+
+		values = append(values, val)
 	}
+
+	return values, nil
+}
+
+func Unify(values []cue.Value) cue.Value {
+	if len(values) == 0 {
+		return cue.Value{}
+	}
+
+	val := values[0]
+	for _, v := range values[1:] {
+		val = val.Unify(v)
+	}
+
+	return val
 }

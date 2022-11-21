@@ -30,8 +30,8 @@ type ExportDataSource struct {
 
 // ExportDataSourceModel describes the data source data model.
 type ExportDataSourceModel struct {
-	Args     types.List   `tfsdk:"args"`
 	Dir      types.String `tfsdk:"dir"`
+	Files    types.List   `tfsdk:"files"`
 	ID       types.String `tfsdk:"id"`
 	Package  types.String `tfsdk:"pkg"`
 	Path     types.String `tfsdk:"path"`
@@ -47,14 +47,14 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 	return tfsdk.Schema{
 		MarkdownDescription: "The export data source evaluates a CUE definition and renders the emit value as JSON encoded string",
 		Attributes: map[string]tfsdk.Attribute{
-			"args": {
-				MarkdownDescription: "Command-line arguments passed to instances loading.",
-				Type:                types.ListType{ElemType: types.StringType},
-				Optional:            true,
-			},
 			"dir": {
 				MarkdownDescription: "Directory to use for CUE's evaluation. If omitted the current directory is used instead.",
 				Type:                types.StringType,
+				Optional:            true,
+			},
+			"files": {
+				MarkdownDescription: "List of paths to CUE files to evaluate.",
+				Type:                types.ListType{ElemType: types.StringType},
 				Optional:            true,
 			},
 			"id": {
@@ -112,8 +112,8 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	var args []string
-	resp.Diagnostics.Append(data.Args.ElementsAs(ctx, &args, false)...)
+	var files []string
+	resp.Diagnostics.Append(data.Files.ElementsAs(ctx, &files, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -124,7 +124,7 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	values, err := d.client.Load(cuecontext.New(), args, &load.Config{
+	values, err := d.client.Load(cuecontext.New(), files, &load.Config{
 		Dir:     data.Dir.ValueString(),
 		Package: data.Package.ValueString(),
 		Tags:    tags,

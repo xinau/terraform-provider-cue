@@ -43,6 +43,13 @@ func TestExportDataSourceRendered(t *testing.T) {
 			}`,
 			want: `{"Hello":", World!"}`,
 		},
+		"inject tags": {
+			config: `{
+				dir  = "testdata/single"
+				tags = ["name=Alice"]
+			}`,
+			want: `{"Hello":", Alice!"}`,
+		},
 	}
 
 	for name, test := range tests {

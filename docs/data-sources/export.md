@@ -3,28 +3,20 @@
 page_title: "cue_export Data Source - terraform-provider-cue"
 subcategory: ""
 description: |-
-  The cue_export data source evaluates a CUE configuration and renders the emit value as JSON encoded string.
+  The export data source evaluates a CUE definition and renders the emit value as JSON encoded string
 ---
 
 # cue_export (Data Source)
 
-The `cue_export` data source evaluates a CUE configuration and renders the emit value as JSON encoded string.
+The export data source evaluates a CUE definition and renders the emit value as JSON encoded string
 
 ## Example Usage
 
 ```terraform
-data "cue_export" "config" {}
+data "cue_export" "example" {}
 
-locals {
-  config = jsondecode(data.cue_export.config.rendered)
-}
-
-output "name" {
-  value = config.name
-}
-
-output "port" {
-  value = config.port
+output "example" {
+  value = jsondecode(data.cue_export.example.rendered)
 }
 ```
 
@@ -33,13 +25,13 @@ output "port" {
 
 ### Optional
 
-- **expression** (String) If set only export this single expression.
-- **files** (List of String) Files to evaluate and emit. Multiple files are combined at the top-level. Order doesn't matter. In absence of files, the working directory is loaded as a package instance.
-- **id** (String) The ID of this resource.
-- **working_dir** (String) Working directory of the program. If not supplied, the program will run in the current directory.
+- `args` (List of String) Command-line arguments passed to instances loading.
+- `dir` (String) Directory to use for CUE's evaluation. If omitted the current directory is used instead.
+- `path` (String) Path to lookup inside CUE value.
 
 ### Read-Only
 
-- **rendered** (String) The final rendered JSON encoded string of the emit value.
+- `id` (String) SHA256 sum of the rendered emit value.
+- `rendered` (String) Emit value rendered as JSON encoded string.
 
 

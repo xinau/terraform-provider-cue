@@ -1,13 +1,5 @@
-data "cue_export" "config" {}
+data "cue_export" "example" {}
 
-locals {
-  config = jsondecode(data.cue_export.config.rendered)
-}
-
-output "name" {
-  value = config.name
-}
-
-output "port" {
-  value = config.port
+output "example" {
+  value = jsondecode(data.cue_export.example.rendered)
 }

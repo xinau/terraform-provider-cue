@@ -60,3 +60,7 @@ To compile the provider, run `go install`. This will build the provider and put
 the provider binary in the `$GOPATH/bin` directory.
 
 To generate or update documentation, run `go generate`.
+
+## LICENSE
+
+This project is under [MPL-2.0 license](./LICENSE).

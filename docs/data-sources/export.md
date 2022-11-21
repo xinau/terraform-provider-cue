@@ -28,6 +28,7 @@ output "example" {
 - `args` (List of String) Command-line arguments passed to instances loading.
 - `dir` (String) Directory to use for CUE's evaluation. If omitted the current directory is used instead.
 - `path` (String) Path to lookup inside CUE value.
+- `pkg` (String) Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.
 
 ### Read-Only
 

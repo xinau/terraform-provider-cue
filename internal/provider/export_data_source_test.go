@@ -36,6 +36,13 @@ func TestExportDataSourceRendered(t *testing.T) {
 			}`,
 			want: `"Baz"`,
 		},
+		"load package": {
+			config: `{
+				dir = "testdata/packages"
+				pkg = "example"
+			}`,
+			want: `{"Hello":", World!"}`,
+		},
 	}
 
 	for name, test := range tests {

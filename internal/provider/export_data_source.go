@@ -33,6 +33,7 @@ type ExportDataSourceModel struct {
 	Args     types.List   `tfsdk:"args"`
 	Dir      types.String `tfsdk:"dir"`
 	ID       types.String `tfsdk:"id"`
+	Package  types.String `tfsdk:"pkg"`
 	Path     types.String `tfsdk:"path"`
 	Rendered types.String `tfsdk:"rendered"`
 }
@@ -65,6 +66,11 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				Type:                types.StringType,
 				Optional:            true,
 				Validators:          []tfsdk.AttributeValidator{NewPathValidator()},
+			},
+			"pkg": {
+				MarkdownDescription: "Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.",
+				Type:                types.StringType,
+				Optional:            true,
 			},
 			"rendered": {
 				MarkdownDescription: "Emit value rendered as JSON encoded string.",
@@ -107,7 +113,8 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	values, err := d.client.Load(cuecontext.New(), args, &load.Config{
-		Dir: data.Dir.ValueString(),
+		Dir:     data.Dir.ValueString(),
+		Package: data.Package.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unexpected CUE Loading Error",

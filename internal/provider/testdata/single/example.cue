@@ -1,3 +1,4 @@
 package example
 
-Hello: string | *", World!"
+_name: string | *"World" @tag(name)
+Hello: ", \(_name)!"

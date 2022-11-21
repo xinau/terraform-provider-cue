@@ -13,4 +13,6 @@ FEATURES:
 
 * Add attribute `pkg` to **cue_export** for the package to be loaded.
 
+* Add attribute `tags` to **cue_export** for injecting values as fields.
+
 ## 0.1.0 (Initial Release)

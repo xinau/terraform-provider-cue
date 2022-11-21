@@ -36,6 +36,7 @@ type ExportDataSourceModel struct {
 	Package  types.String `tfsdk:"pkg"`
 	Path     types.String `tfsdk:"path"`
 	Rendered types.String `tfsdk:"rendered"`
+	Tags     types.List   `tfsdk:"tags"`
 }
 
 func (d *ExportDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -77,6 +78,11 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				Type:                types.StringType,
 				Computed:            true,
 			},
+			"tags": {
+				MarkdownDescription: "List of boolean tags or key-value pairs injected as values into fields during loading.",
+				Type:                types.ListType{ElemType: types.StringType},
+				Optional:            true,
+			},
 		},
 	}, nil
 }
@@ -112,9 +118,16 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	var tags []string
+	resp.Diagnostics.Append(data.Tags.ElementsAs(ctx, &tags, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	values, err := d.client.Load(cuecontext.New(), args, &load.Config{
 		Dir:     data.Dir.ValueString(),
 		Package: data.Package.ValueString(),
+		Tags:    tags,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unexpected CUE Loading Error",

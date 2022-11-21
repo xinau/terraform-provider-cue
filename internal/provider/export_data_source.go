@@ -64,7 +64,7 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				MarkdownDescription: "Path to lookup inside CUE value.",
 				Type:                types.StringType,
 				Optional:            true,
-				// TODO: add custom validator for cue.Path
+				Validators:          []tfsdk.AttributeValidator{NewPathValidator()},
 			},
 			"rendered": {
 				MarkdownDescription: "Emit value rendered as JSON encoded string.",

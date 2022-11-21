@@ -8,35 +8,44 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestExportDataSourceDir(t *testing.T) {
-	UnitTestRendered(t,
-		`{ dir = "testdata/multiple" }`,
-		`{"Alice":"Bob","Foo":{"Bar":"Baz"},"Hello":", World!"}`,
-	)
-}
+func TestExportDataSourceRendered(t *testing.T) {
+	t.Parallel()
 
-func TestExportDataSourceSingleArgs(t *testing.T) {
-	UnitTestRendered(t,
-		`{ args = ["testdata/multiple/example_1.cue"] }`,
-		`{"Alice":"Bob"}`,
-	)
-}
+	type testCase struct {
+		config string
+		want   string
+	}
 
-func TestExportDataSourceMultipleArgs(t *testing.T) {
-	UnitTestRendered(t,
-		`{ args = ["testdata/multiple/example_1.cue", "testdata/multiple/example_3.cue"] }`,
-		`{"Alice":"Bob","Hello":", World!"}`,
-	)
-}
+	tests := map[string]testCase{
+		"inside dir": {
+			config: `{ dir = "testdata/multiple" }`,
+			want:   `{"Alice":"Bob","Foo":{"Bar":"Baz"},"Hello":", World!"}`,
+		},
+		"single argument": {
+			config: `{ args = ["testdata/multiple/example_1.cue"] }`,
+			want:   `{"Alice":"Bob"}`,
+		},
+		"multiple arguments": {
+			config: `{ args = ["testdata/multiple/example_1.cue", "testdata/multiple/example_3.cue"] }`,
+			want:   `{"Alice":"Bob","Hello":", World!"}`,
+		},
+		"lookup path": {
+			config: `{
+				dir  = "testdata/multiple"
+				path = "Foo.Bar"
+			}`,
+			want: `"Baz"`,
+		},
+	}
 
-func TestExportDataSourcePath(t *testing.T) {
-	UnitTestRendered(t,
-		`{
-			dir  = "testdata/multiple"
-			path = "Foo.Bar"
-		}`,
-		`"Baz"`,
-	)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			UnitTestSteps(t, resource.TestStep{
+				Config: fmt.Sprintf("data \"cue_export\" \"test\" %s", test.config),
+				Check:  resource.TestCheckResourceAttr("data.cue_export.test", "rendered", test.want),
+			})
+		})
+	}
 }
 
 func TestExportDataSourceFull(t *testing.T) {
@@ -51,38 +60,44 @@ func TestExportDataSourceFull(t *testing.T) {
 	})
 }
 
-func TestExportDataSourceLoadingError(t *testing.T) {
-	UnitTestSteps(t, resource.TestStep{
-		Config:      `data "cue_export" "test" { dir = "testdata/missing" }`,
-		ExpectError: regexp.MustCompile(`Unexpected CUE Loading Error`),
-	})
-}
+func TestExportDataSourceErrors(t *testing.T) {
+	t.Parallel()
 
-func TestExportDataSourceValidationError(t *testing.T) {
-	UnitTestSteps(t, resource.TestStep{
-		Config:      `data "cue_export" "test" { dir = "testdata/incomplete" }`,
-		ExpectError: regexp.MustCompile(`Unexpected CUE Validation Error`),
-	})
-}
+	type testCase struct {
+		config string
+		want   *regexp.Regexp
+	}
 
-func TestExportDataSourceParsePathError(t *testing.T) {
-	UnitTestSteps(t, resource.TestStep{
-		Config: `data "cue_export" "test" { 
-			dir  = "testdata/multiple"
-			path = "path,not,found"
-		}`,
-		ExpectError: regexp.MustCompile(`Unexpected CUE Parse Path Error`),
-	})
-}
+	tests := map[string]testCase{
+		"cue instances loading error": {
+			config: `{ dir = "testdata/missing" }`,
+			want:   regexp.MustCompile(`Unexpected CUE Loading Error`),
+		},
+		"cue value validation error": {
+			config: `{ dir = "testdata/incomplete" }`,
+			want:   regexp.MustCompile(`Unexpected CUE Validation Error`),
+		},
+		"path parser error": {
+			config: `{ path = "path,not,found" }`,
+			want:   regexp.MustCompile(`Invalid Attribute Value`),
+		},
+		"path not found": {
+			config: `{ 
+				dir  = "testdata/multiple"
+				path = "path.not.found"
+			}`,
+			want: regexp.MustCompile(`Unexpected CUE Path Lookup Error`),
+		},
+	}
 
-func TestExportDataSourceLookupPathError(t *testing.T) {
-	UnitTestSteps(t, resource.TestStep{
-		Config: `data "cue_export" "test" { 
-			dir  = "testdata/multiple"
-			path = "path.not.found"
-		}`,
-		ExpectError: regexp.MustCompile(`Unexpected CUE Path Lookup Error`),
-	})
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			UnitTestSteps(t, resource.TestStep{
+				Config:      fmt.Sprintf("data \"cue_export\" \"test\" %s", test.config),
+				ExpectError: test.want,
+			})
+		})
+	}
 }
 
 func TestExportDataSourceConcurrency(t *testing.T) {
@@ -105,15 +120,9 @@ func TestExportDataSourceConcurrency(t *testing.T) {
 }
 
 func UnitTestSteps(t *testing.T, steps ...resource.TestStep) {
+	t.Helper()
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: testProtoV6ProviderFactories,
 		Steps:                    steps,
-	})
-}
-
-func UnitTestRendered(t *testing.T, config, want string) {
-	UnitTestSteps(t, resource.TestStep{
-		Config: fmt.Sprintf("data \"cue_export\" \"test\" %s", config),
-		Check:  resource.TestCheckResourceAttr("data.cue_export.test", "rendered", want),
 	})
 }

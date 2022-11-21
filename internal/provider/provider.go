@@ -2,88 +2,67 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"sync"
 
-	"cuelang.org/go/cue"
-	"cuelang.org/go/cue/load"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-func init() {
-	// Set descriptions to support markdown syntax, this will be used in document generation
-	// and the language server.
-	schema.DescriptionKind = schema.StringMarkdown
+// Ensure Provider satisfies various provider interfaces.
+var _ provider.Provider = &Provider{}
+var _ provider.ProviderWithMetadata = &Provider{}
 
-	// Customize the content of descriptions when output. For example you can add defaults on
-	// to the exported descriptions if present.
-	// schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
-	// 	desc := s.Description
-	// 	if s.Default != nil {
-	// 		desc += fmt.Sprintf(" Defaults to `%v`.", s.Default)
-	// 	}
-	// 	return strings.TrimSpace(desc)
-	// }
+// Provider defines the provider implementation.
+type Provider struct {
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
+	version string
 }
 
-func New(version string) func() *schema.Provider {
-	return func() *schema.Provider {
-		p := &schema.Provider{
-			DataSourcesMap: map[string]*schema.Resource{
-				"cue_export": DataSourceExport(),
-			},
+// ProviderModel describes the provider data model.
+type ProviderModel struct{}
+
+func (p *Provider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "cue"
+	resp.Version = p.version
+}
+
+func (p *Provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		MarkdownDescription: "Terraform provider for generating JSON documents with [CUE](https://cuelang.org/).",
+	}, nil
+}
+
+func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var data ProviderModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client := &Client{}
+	resp.DataSourceData = client
+}
+
+func (p *Provider) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{}
+}
+
+func (p *Provider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		NewExportDataSource,
+	}
+}
+
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &Provider{
+			version: version,
 		}
-
-		p.ConfigureContextFunc = Configure(version, p)
-
-		return p
 	}
-}
-
-func Configure(_ string, _ *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		return &Client{}, nil
-	}
-}
-
-// Client is a workaround for some concurrency problems inside cue
-// These are triggered i.e. when loading instances concurrently
-// See https://github.com/cue-lang/cue/issues/460
-type Client struct {
-	mtx sync.Mutex
-}
-
-func (c *Client) Load(ctx *cue.Context, args []string, cfg *load.Config) ([]cue.Value, error) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	var values []cue.Value
-	for _, i := range load.Instances(args, cfg) {
-		if err := i.Err; err != nil {
-			return nil, fmt.Errorf("failed to load instance: %w", err)
-		}
-
-		val := ctx.BuildInstance(i)
-		if err := val.Err(); err != nil {
-			return nil, fmt.Errorf("failed to build instance: %w", err)
-		}
-
-		values = append(values, val)
-	}
-
-	return values, nil
-}
-
-func Unify(values []cue.Value) cue.Value {
-	if len(values) == 0 {
-		return cue.Value{}
-	}
-
-	val := values[0]
-	for _, v := range values[1:] {
-		val = val.Unify(v)
-	}
-
-	return val
 }

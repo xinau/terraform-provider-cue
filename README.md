@@ -1,37 +1,62 @@
-# terraform-provider-cue
+# Terraform Provider CUE
 
-Terraform provider for interacting with [CUE](https://cuelang.org/).
+Terraform provider for generating JSON documents with
+[CUE](https://cuelang.org/).
 
-## Installation
+## Documentation
 
-For terraform >=0.13 add the provider to the `required_providers` inside the `terraform` configuration block.
+The documentation for the CUE provider is available on the [Terraform
+Registry](https://registry.terraform.io/providers/xinau/cue/latest/docs).
 
-```hcl
+## Requirements
+
+* [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+* [Go](https://golang.org/doc/install) >= 1.18
+
+## Building the Provider
+
+To build the provider, you'll need to clone the repository and execute the Go
+`install` command from inside the repository's directory.
+
+```bash
+go install
+```
+
+## Using the provider
+
+The provider can be used by adding it to the [provider
+requirements](https://developer.hashicorp.com/terraform/language/providers/requirements).
+
+```terraform
 terraform {
   required_providers {
     cue = {
-      source = "xinau/cue"
+      source  = "xinau/cue"
     }
   }
 }
 ```
 
-## Usage
+If you wish to use a local provider binary instead, it will need to added to the
+[development overrides](https://developer.hashicorp.com/terraform/cli/config/config-file#development-overrides-for-provider-developers).
 
-See [provider documentation on the Terraform Registry](https://registry.terraform.io/providers/xinau/cue/latest/docs)
-
-## Development
-
-To compile the provider and test locally, run `go install` and setup `dev_overrides` inside the `.terraformrc` file.
-This will build the provider and put the provider binary in the `$GOPATH/bin` for terraform to use, I.e.
-
-```hcl
+```terraform
 provider_installation {
   dev_overrides {
-    "xinau/cue" = "/home/xinau/go/bin"
+    "xinau/cue" = "/home/developer/go/bin/terraform-provider-cue"
   }
+
   direct {}
 }
 ```
 
-To generate or update the provider documentation, run `go generate`.
+## Developing the Provider
+
+If you wish to work on the provider, you'll first need
+[Go](https://www.golang.org) installed on your machine (see
+[Requirements](#requirements) above).
+
+To compile the provider, run `go install`. This will build the provider and put
+the provider binary in the `$GOPATH/bin` directory.
+
+To generate or update documentation, run `go generate`.

@@ -1,13 +1,7 @@
-data "cue_export" "config" {}
+provider "cue" {}
 
-locals {
-  config = jsondecode(data.cue_export.config.rendered)
-}
+data "cue_export" "example" {}
 
-output "name" {
-  value = config.name
-}
-
-output "port" {
-  value = config.port
+output "example" {
+  value = jsondecode(data.cue_export.example.rendered)
 }

@@ -67,7 +67,7 @@ func TestExportDataSourceFull(t *testing.T) {
 		Config: `data "cue_export" "test" { dir = "testdata/single" }`,
 		Check: resource.ComposeAggregateTestCheckFunc(
 			resource.TestCheckResourceAttr("data.cue_export.test", "id",
-				"715eda0e975747591d5ed7b5d40c9d95183397598e42023fcc2eeb2ff8e69a24"),
+				"92c9a4b5349b70f09b04dc59628ac36c"),
 			resource.TestCheckResourceAttr("data.cue_export.test", "rendered",
 				"{\"Hello\":\", World!\"}"),
 		),
@@ -124,11 +124,11 @@ func TestExportDataSourceConcurrency(t *testing.T) {
 		`,
 		Check: resource.ComposeAggregateTestCheckFunc(
 			resource.TestCheckResourceAttr("data.cue_export.test.0", "id",
-				"715eda0e975747591d5ed7b5d40c9d95183397598e42023fcc2eeb2ff8e69a24"),
+				"92c9a4b5349b70f09b04dc59628ac36c"),
 			resource.TestCheckResourceAttr("data.cue_export.test.1", "id",
-				"715eda0e975747591d5ed7b5d40c9d95183397598e42023fcc2eeb2ff8e69a24"),
+				"92c9a4b5349b70f09b04dc59628ac36c"),
 			resource.TestCheckResourceAttr("data.cue_export.test.2", "id",
-				"715eda0e975747591d5ed7b5d40c9d95183397598e42023fcc2eeb2ff8e69a24"),
+				"92c9a4b5349b70f09b04dc59628ac36c"),
 		),
 	})
 }

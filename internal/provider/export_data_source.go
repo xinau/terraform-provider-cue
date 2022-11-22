@@ -2,10 +2,10 @@ package provider
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
@@ -61,7 +61,7 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				},
 			},
 			"id": {
-				MarkdownDescription: "SHA256 sum of the rendered emit value.",
+				MarkdownDescription: "FNV-128a sum of the rendered emit value.",
 				Type:                types.StringType,
 				Computed:            true,
 			},
@@ -177,6 +177,8 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 }
 
 func hash(in []byte) string {
-	sum := sha256.Sum256(in)
-	return hex.EncodeToString(sum[:])
+	hash := fnv.New128a()
+	_, _ = hash.Write(in)
+	var buf []byte
+	return hex.EncodeToString(hash.Sum(buf))
 }

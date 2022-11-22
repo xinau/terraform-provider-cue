@@ -31,10 +31,10 @@ type ExportDataSource struct {
 // ExportDataSourceModel describes the data source data model.
 type ExportDataSourceModel struct {
 	Dir      types.String `tfsdk:"dir"`
-	Files    types.List   `tfsdk:"files"`
+	Expr     types.String `tfsdk:"expr"`
 	ID       types.String `tfsdk:"id"`
+	Paths    types.List   `tfsdk:"paths"`
 	Package  types.String `tfsdk:"pkg"`
-	Path     types.String `tfsdk:"path"`
 	Rendered types.String `tfsdk:"rendered"`
 	Tags     types.List   `tfsdk:"tags"`
 }
@@ -52,23 +52,23 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				Type:                types.StringType,
 				Optional:            true,
 			},
-			"files": {
-				MarkdownDescription: "List of paths to CUE files to evaluate.",
-				Type:                types.ListType{ElemType: types.StringType},
+			"expr": {
+				MarkdownDescription: "Exrpession to lookup inside CUE value.",
+				Type:                types.StringType,
 				Optional:            true,
+				Validators: []tfsdk.AttributeValidator{
+					NewPathValidator(),
+				},
 			},
 			"id": {
 				MarkdownDescription: "SHA256 sum of the rendered emit value.",
 				Type:                types.StringType,
 				Computed:            true,
 			},
-			"path": {
-				MarkdownDescription: "Path to lookup inside CUE value.",
-				Type:                types.StringType,
+			"paths": {
+				MarkdownDescription: "List of paths to CUE instances to evaluate.",
+				Type:                types.ListType{ElemType: types.StringType},
 				Optional:            true,
-				Validators: []tfsdk.AttributeValidator{
-					NewPathValidator(),
-				},
 			},
 			"pkg": {
 				MarkdownDescription: "Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.",
@@ -114,8 +114,8 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	var files []string
-	resp.Diagnostics.Append(data.Files.ElementsAs(ctx, &files, false)...)
+	var paths []string
+	resp.Diagnostics.Append(data.Paths.ElementsAs(ctx, &paths, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -126,7 +126,7 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	values, err := d.client.Load(cuecontext.New(), files, &load.Config{
+	values, err := d.client.Load(cuecontext.New(), paths, &load.Config{
 		Dir:     data.Dir.ValueString(),
 		Package: data.Package.ValueString(),
 		Tags:    tags,
@@ -144,13 +144,13 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	if !data.Path.IsNull() {
-		path := cue.ParsePath(data.Path.ValueString())
+	if !data.Expr.IsNull() {
+		path := cue.ParsePath(data.Expr.ValueString())
 		if err := path.Err(); err != nil {
-			resp.Diagnostics.AddError("Parsing Path Error",
-				fmt.Sprintf("Unable to parse CUE path %q, got error: %s."+
+			resp.Diagnostics.AddError("Expression Parsing Error",
+				fmt.Sprintf("Unable to parse CUE expression %q, got error: %s. "+
 					"Please report this issue to the provider developers.",
-					data.Path.ValueString(), err,
+					data.Expr.ValueString(), err,
 				))
 			return
 		}

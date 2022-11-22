@@ -21,18 +21,18 @@ func TestExportDataSourceRendered(t *testing.T) {
 			config: `{ dir = "testdata/multiple" }`,
 			want:   `{"Alice":"Bob","Foo":{"Bar":"Baz"},"Hello":", World!"}`,
 		},
-		"single file": {
-			config: `{ files = ["testdata/multiple/example_1.cue"] }`,
+		"single path": {
+			config: `{ paths = ["testdata/multiple/example_1.cue"] }`,
 			want:   `{"Alice":"Bob"}`,
 		},
-		"multiple files": {
-			config: `{ files = ["testdata/multiple/example_1.cue", "testdata/multiple/example_3.cue"] }`,
+		"multiple paths": {
+			config: `{ paths = ["testdata/multiple/example_1.cue", "testdata/multiple/example_3.cue"] }`,
 			want:   `{"Alice":"Bob","Hello":", World!"}`,
 		},
-		"lookup path": {
+		"lookup expr": {
 			config: `{
 				dir  = "testdata/multiple"
-				path = "Foo.Bar"
+				expr = "Foo.Bar"
 			}`,
 			want: `"Baz"`,
 		},

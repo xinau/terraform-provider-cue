@@ -26,8 +26,8 @@ output "example" {
 ### Optional
 
 - `dir` (String) Directory to use for CUE's evaluation. If omitted the current directory is used instead.
-- `files` (List of String) List of paths to CUE files to evaluate.
-- `path` (String) Path to lookup inside CUE value.
+- `expr` (String) Exrpession to lookup inside CUE value.
+- `paths` (List of String) List of paths to CUE instances to evaluate.
 - `pkg` (String) Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.
 - `tags` (List of String) List of boolean tags or key-value pairs injected as values into fields during loading.
 

@@ -43,8 +43,8 @@ func (v *PathValidator) Validate(ctx context.Context, req tfsdk.ValidateAttribut
 	if err := path.Err(); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			req.AttributePath,
-			"Parsing Path Error",
-			fmt.Sprintf("Parsing CUE path %q failed: %v", str.ValueString(), err),
+			"Expression Parsing Error",
+			fmt.Sprintf("Parsing CUE expression %q failed: %v", str.ValueString(), err),
 		)
 		return
 	}

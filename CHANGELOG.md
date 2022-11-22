@@ -5,8 +5,8 @@ CHANGES:
 * Provider has been migrated from `terraform-plugin-sdkv2` to
   `terraform-plugin-framework`.
 
-* Attributes `expression` and `working_dir` inside **cue_export** data source has been renamed to
-  `path` and `dir`.
+* Attributes `expression`, `files` and `working_dir` inside **cue_export** data
+  source have been renamed to `expr`, `paths` and `dir`.
 
 FEATURES:
 

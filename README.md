@@ -14,7 +14,7 @@ The following table displays the CUE version the provider uses.
 
 | Terraform Provider | CUE    |
 |--------------------|--------|
-| v0.2.0 (Upcoming)  | v0.4.3 |
+| v0.2.0             | v0.4.3 |
 | v0.1.0             | v0.4.1 |
 
 ## Requirements

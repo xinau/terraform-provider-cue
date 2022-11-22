@@ -12,10 +12,10 @@ Registry](https://registry.terraform.io/providers/xinau/cue/latest/docs).
 
 The following table displays the CUE version the provider uses.
 
-| terraform-provider-cue | CUE    |
-|------------------------|--------|
-| v0.2.0 (Upcoming)      | v0.4.3 |
-| v0.1.0                 | v0.4.1 |
+| Terraform Provider | CUE    |
+|--------------------|--------|
+| v0.2.0 (Upcoming)  | v0.4.3 |
+| v0.1.0             | v0.4.1 |
 
 ## Requirements
 

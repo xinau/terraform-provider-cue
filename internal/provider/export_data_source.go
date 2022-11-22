@@ -37,6 +37,7 @@ type ExportDataSourceModel struct {
 	Package  types.String `tfsdk:"pkg"`
 	Rendered types.String `tfsdk:"rendered"`
 	Tags     types.List   `tfsdk:"tags"`
+	Unified  types.Bool   `tfsdk:"unified"`
 }
 
 func (d *ExportDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -83,6 +84,11 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 			"tags": {
 				MarkdownDescription: "List of boolean tags or key-value pairs injected as values into fields during loading.",
 				Type:                types.ListType{ElemType: types.StringType},
+				Optional:            true,
+			},
+			"unified": {
+				MarkdownDescription: "Unify multiple values into a single one. If false only the first value is emitted. (Default `true`)",
+				Type:                types.BoolType,
 				Optional:            true,
 			},
 		},
@@ -138,6 +144,12 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	val := values[0]
+	if data.Unified.IsNull() || data.Unified.IsUnknown() || data.Unified.ValueBool() {
+		for _, w := range values[1:] {
+			val = val.Unify(w)
+		}
+	}
+
 	if err := val.Validate(cue.Concrete(true), cue.Final()); err != nil {
 		resp.Diagnostics.AddError("Value Validation Error",
 			fmt.Sprintf("Unable to validate CUE value, got error: %s", err))

@@ -30,10 +30,11 @@ output "example" {
 - `paths` (List of String) List of paths to CUE instances to evaluate.
 - `pkg` (String) Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.
 - `tags` (List of String) List of boolean tags or key-value pairs injected as values into fields during loading.
+- `unified` (Boolean) Unify multiple values into a single one. If false only the first value is emitted. (Default `true`)
 
 ### Read-Only
 
-- `id` (String) SHA256 sum of the rendered emit value.
+- `id` (String) FNV-128a sum of the rendered emit value.
 - `rendered` (String) Emit value rendered as JSON encoded string.
 
 

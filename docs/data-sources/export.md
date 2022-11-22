@@ -33,7 +33,7 @@ output "example" {
 
 ### Read-Only
 
-- `id` (String) SHA256 sum of the rendered emit value.
+- `id` (String) FNV-128a sum of the rendered emit value.
 - `rendered` (String) Emit value rendered as JSON encoded string.
 
 

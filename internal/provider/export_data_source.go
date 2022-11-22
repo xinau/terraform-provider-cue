@@ -66,7 +66,9 @@ func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Di
 				MarkdownDescription: "Path to lookup inside CUE value.",
 				Type:                types.StringType,
 				Optional:            true,
-				Validators:          []tfsdk.AttributeValidator{NewPathValidator()},
+				Validators: []tfsdk.AttributeValidator{
+					NewPathValidator(),
+				},
 			},
 			"pkg": {
 				MarkdownDescription: "Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.",
@@ -130,14 +132,14 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		Tags:    tags,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError("Unexpected CUE Loading Error",
+		resp.Diagnostics.AddError("Loading Instances Error",
 			fmt.Sprintf("Unable to load CUE values, got error: %s", err))
 		return
 	}
 
 	val := values[0]
 	if err := val.Validate(cue.Concrete(true), cue.Final()); err != nil {
-		resp.Diagnostics.AddError("Unexpected CUE Validation Error",
+		resp.Diagnostics.AddError("Value Validation Error",
 			fmt.Sprintf("Unable to validate CUE value, got error: %s", err))
 		return
 	}
@@ -145,14 +147,17 @@ func (d *ExportDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	if !data.Path.IsNull() {
 		path := cue.ParsePath(data.Path.ValueString())
 		if err := path.Err(); err != nil {
-			resp.Diagnostics.AddError("Unexpected CUE Parse Path Error",
-				fmt.Sprintf("Unable to parse CUE path, got error: %s. Please report this issue to the provider developers.", err))
+			resp.Diagnostics.AddError("Parsing Path Error",
+				fmt.Sprintf("Unable to parse CUE path %q, got error: %s."+
+					"Please report this issue to the provider developers.",
+					data.Path.ValueString(), err,
+				))
 			return
 		}
 
 		val = val.LookupPath(path)
 		if err := val.Err(); err != nil {
-			resp.Diagnostics.AddError("Unexpected CUE Path Lookup Error",
+			resp.Diagnostics.AddError("Lookup Path Error",
 				fmt.Sprintf("Unable to lookup CUE path in value, got error: %s", err))
 			return
 		}

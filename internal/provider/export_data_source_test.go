@@ -85,22 +85,22 @@ func TestExportDataSourceErrors(t *testing.T) {
 	tests := map[string]testCase{
 		"cue instances loading error": {
 			config: `{ dir = "testdata/missing" }`,
-			want:   regexp.MustCompile(`Unexpected CUE Loading Error`),
+			want:   regexp.MustCompile(`Loading Instances Error`),
 		},
 		"cue value validation error": {
 			config: `{ dir = "testdata/incomplete" }`,
-			want:   regexp.MustCompile(`Unexpected CUE Validation Error`),
+			want:   regexp.MustCompile(`Value Validation Error`),
 		},
 		"path parser error": {
 			config: `{ path = "path,not,found" }`,
-			want:   regexp.MustCompile(`Invalid Attribute Value`),
+			want:   regexp.MustCompile(`Parsing Path Error`),
 		},
 		"path not found": {
 			config: `{ 
 				dir  = "testdata/multiple"
 				path = "path.not.found"
 			}`,
-			want: regexp.MustCompile(`Unexpected CUE Path Lookup Error`),
+			want: regexp.MustCompile(`Lookup Path Error`),
 		},
 	}
 

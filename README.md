@@ -8,6 +8,15 @@ Terraform provider for generating JSON documents with
 The documentation for the CUE provider is available on the [Terraform
 Registry](https://registry.terraform.io/providers/xinau/cue/latest/docs).
 
+## Versions
+
+The following table displays the CUE version the provider uses.
+
+| terraform-provider-cue | CUE    |
+|------------------------|--------|
+| v0.2.0 (Upcoming)      | v0.4.3 |
+| v0.1.0                 | v0.4.1 |
+
 ## Requirements
 
 * [Terraform](https://www.terraform.io/downloads.html) >= 1.0

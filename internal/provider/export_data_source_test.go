@@ -83,22 +83,22 @@ func TestExportDataSourceErrors(t *testing.T) {
 	}
 
 	tests := map[string]testCase{
-		"cue instances loading error": {
+		"loading instances error": {
 			config: `{ dir = "testdata/missing" }`,
 			want:   regexp.MustCompile(`Loading Instances Error`),
 		},
-		"cue value validation error": {
+		"value validation error": {
 			config: `{ dir = "testdata/incomplete" }`,
 			want:   regexp.MustCompile(`Value Validation Error`),
 		},
-		"path parser error": {
-			config: `{ path = "path,not,found" }`,
-			want:   regexp.MustCompile(`Parsing Path Error`),
+		"expression parsing error": {
+			config: `{ expr = "path,not,found" }`,
+			want:   regexp.MustCompile(`Expression Parsing Error`),
 		},
-		"path not found": {
+		"lookup expr error": {
 			config: `{ 
 				dir  = "testdata/multiple"
-				path = "path.not.found"
+				expr = "path.not.found"
 			}`,
 			want: regexp.MustCompile(`Lookup Path Error`),
 		},

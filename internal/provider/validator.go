@@ -5,12 +5,9 @@ import (
 	"fmt"
 
 	"cuelang.org/go/cue"
-	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
-
-const PathValidatorDescription = "value must be a valid CUE path"
 
 type PathValidator struct{}
 
@@ -18,37 +15,37 @@ func NewPathValidator() *PathValidator {
 	return &PathValidator{}
 }
 
-func (pv *PathValidator) Description(_ context.Context) string {
-	return PathValidatorDescription
+func (v *PathValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
 }
 
-func (pv *PathValidator) MarkdownDescription(_ context.Context) string {
-	return PathValidatorDescription
+func (v *PathValidator) MarkdownDescription(ctx context.Context) string {
+	return "Value must be a valid CUE path"
 }
 
-func (pv *PathValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
-	typ := req.AttributeConfig.Type(ctx)
-	if typ != types.StringType {
-		resp.Diagnostics.Append(validatordiag.InvalidAttributeTypeDiagnostic(
-			req.AttributePath,
-			"expected value of type string",
-			typ.String(),
-		))
+func (v *PathValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
+	if req.AttributeConfig.IsNull() || req.AttributeConfig.IsUnknown() {
 		return
 	}
 
-	str := req.AttributeConfig.(types.String)
-	if str.IsUnknown() || str.IsNull() {
+	var str types.String
+	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &str)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	if str.IsNull() || str.IsUnknown() {
 		return
 	}
 
 	path := cue.ParsePath(str.ValueString())
 	if err := path.Err(); err != nil {
-		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+		resp.Diagnostics.AddAttributeError(
 			req.AttributePath,
-			pv.Description(ctx),
-			fmt.Sprintf("invalid path %q: %s", str.ValueString(), err),
-		))
+			"Parsing Path Error",
+			fmt.Sprintf("Parsing CUE path %q failed: %v", str.ValueString(), err),
+		)
 		return
 	}
 

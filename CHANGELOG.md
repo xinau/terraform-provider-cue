@@ -1,4 +1,4 @@
-## 0.2.0 (Upcoming)
+## 0.2.0
     
 CHANGES:
 

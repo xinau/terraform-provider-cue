@@ -22,7 +22,11 @@ func (c *Client) Load(ctx *cue.Context, args []string, cfg *load.Config) ([]cue.
 	var values []cue.Value
 	for _, i := range load.Instances(args, cfg) {
 		if err := i.Err; err != nil {
-			return nil, fmt.Errorf("loading instances: %w", err)
+			return nil, fmt.Errorf("loading instance %q: %w", i.ID(), err)
+		}
+
+		if i.Incomplete {
+			return nil, fmt.Errorf("loading instance %q dependencies", i.ID())
 		}
 
 		val := ctx.BuildInstance(i)

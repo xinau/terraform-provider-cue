@@ -11,8 +11,8 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -44,55 +44,49 @@ func (d *ExportDataSource) Metadata(ctx context.Context, req datasource.Metadata
 	resp.TypeName = req.ProviderTypeName + "_export"
 }
 
-func (d *ExportDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
+func (d *ExportDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		MarkdownDescription: "The export data source evaluates a CUE definition and renders the emit value as JSON encoded string",
-		Attributes: map[string]tfsdk.Attribute{
-			"dir": {
+		Attributes: map[string]schema.Attribute{
+			"dir": schema.StringAttribute{
 				MarkdownDescription: "Directory to use for CUE's evaluation. If omitted the current directory is used instead.",
-				Type:                types.StringType,
 				Optional:            true,
 			},
-			"expr": {
+			"expr": schema.StringAttribute{
 				MarkdownDescription: "Exrpession to lookup inside CUE value.",
-				Type:                types.StringType,
 				Optional:            true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					NewPathValidator(),
 				},
 			},
-			"id": {
+			"id": schema.StringAttribute{
 				MarkdownDescription: "FNV-128a sum of the rendered emit value.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"paths": {
+			"paths": schema.ListAttribute{
+				ElementType:         types.StringType,
 				MarkdownDescription: "List of paths to CUE instances to evaluate.",
-				Type:                types.ListType{ElemType: types.StringType},
 				Optional:            true,
 			},
-			"pkg": {
+			"pkg": schema.StringAttribute{
 				MarkdownDescription: "Name of the package to be loaded. If not set it needs to be uniquely defined in it's context.",
-				Type:                types.StringType,
 				Optional:            true,
 			},
-			"rendered": {
+			"rendered": schema.StringAttribute{
 				MarkdownDescription: "Emit value rendered as JSON encoded string.",
-				Type:                types.StringType,
 				Computed:            true,
 			},
-			"tags": {
+			"tags": schema.ListAttribute{
+				ElementType:         types.StringType,
 				MarkdownDescription: "List of boolean tags or key-value pairs injected as values into fields during loading.",
-				Type:                types.ListType{ElemType: types.StringType},
 				Optional:            true,
 			},
-			"unified": {
+			"unified": schema.BoolAttribute{
 				MarkdownDescription: "Unify multiple values into a single one. If false only the first value is emitted. (Default `true`)",
-				Type:                types.BoolType,
 				Optional:            true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *ExportDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

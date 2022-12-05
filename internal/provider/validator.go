@@ -5,8 +5,7 @@ import (
 	"fmt"
 
 	"cuelang.org/go/cue"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 type PathValidator struct{}
@@ -23,18 +22,8 @@ func (v *PathValidator) MarkdownDescription(ctx context.Context) string {
 	return "Value must be a valid CUE path"
 }
 
-func (v *PathValidator) Validate(ctx context.Context, req tfsdk.ValidateAttributeRequest, resp *tfsdk.ValidateAttributeResponse) {
-	if req.AttributeConfig.IsNull() || req.AttributeConfig.IsUnknown() {
-		return
-	}
-
-	var str types.String
-	diags := tfsdk.ValueAs(ctx, req.AttributeConfig, &str)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
+func (v *PathValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	str := req.ConfigValue
 	if str.IsNull() || str.IsUnknown() {
 		return
 	}
@@ -42,7 +31,7 @@ func (v *PathValidator) Validate(ctx context.Context, req tfsdk.ValidateAttribut
 	path := cue.ParsePath(str.ValueString())
 	if err := path.Err(); err != nil {
 		resp.Diagnostics.AddAttributeError(
-			req.AttributePath,
+			req.Path,
 			"Expression Parsing Error",
 			fmt.Sprintf("Parsing CUE expression %q failed: %v", str.ValueString(), err),
 		)

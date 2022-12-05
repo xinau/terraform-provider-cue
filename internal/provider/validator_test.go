@@ -4,9 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -14,7 +13,7 @@ func TestPathValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		value   attr.Value
+		value   types.String
 		wantErr bool
 	}
 
@@ -34,20 +33,16 @@ func TestPathValidator(t *testing.T) {
 		"null path": {
 			value:   types.StringNull(),
 			wantErr: false,
-		},
-		"invalid type": {
-			value:   types.Int64Value(101),
-			wantErr: true,
 		}}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			resp := tfsdk.ValidateAttributeResponse{}
-			NewPathValidator().Validate(context.TODO(),
-				tfsdk.ValidateAttributeRequest{
-					AttributePath:           path.Root("test"),
-					AttributePathExpression: path.MatchRoot("test"),
-					AttributeConfig:         test.value,
+			resp := validator.StringResponse{}
+			NewPathValidator().ValidateString(context.TODO(),
+				validator.StringRequest{
+					Path:           path.Root("test"),
+					PathExpression: path.MatchRoot("test"),
+					ConfigValue:    test.value,
 				},
 				&resp,
 			)
